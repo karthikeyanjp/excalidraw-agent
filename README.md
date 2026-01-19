@@ -1,5 +1,7 @@
 # excalidraw-agent 🎨
 
+> ⚠️ **Work in Progress** - This project is under active development. APIs may change. Contributions and feedback welcome!
+
 [![npm version](https://img.shields.io/npm/v/excalidraw-agent.svg)](https://www.npmjs.com/package/excalidraw-agent)
 [![CI](https://github.com/karthikeyanjp/excalidraw-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/karthikeyanjp/excalidraw-agent/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
