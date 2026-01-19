@@ -201,6 +201,58 @@ For diagrams, use excalidraw-agent CLI:
 - Arrows: -> (solid) --> (dashed)
 ```
 
+## Example Diagrams
+
+The following diagrams were created entirely with excalidraw-agent:
+
+### Microservices Architecture
+A complex system architecture showing services, databases, message queues, and their connections.
+
+![Microservices Architecture](examples/diagrams/microservices-arch.png)
+
+```bash
+# Created with individual commands for precise positioning
+excalidraw-agent create diagram.excalidraw
+excalidraw-agent add diagram.excalidraw --type rectangle --x 350 --y 50 \
+  --width 180 --height 60 --fill "#4dabf7" --label "API Gateway"
+# ... additional elements and connections
+```
+
+### CI/CD Pipeline
+A deployment pipeline with build, test, security scan, and approval stages.
+
+![CI/CD Pipeline](examples/diagrams/cicd-pipeline.png)
+
+```bash
+# Dark theme with custom colors
+excalidraw-agent create diagram.excalidraw --background "#0d1b2a"
+```
+
+### Decision Flow
+A quick decision flowchart created with the DSL syntax.
+
+![Decision Flow](examples/diagrams/decision-flow.png)
+
+```bash
+excalidraw-agent quick "(Start) -> [Validate] -> {Valid?} -> [Process] -> (End)" \
+  -o flow.excalidraw --style colorful
+```
+
+See the [examples/diagrams](examples/diagrams) directory for the source files.
+
+## Specification
+
+This tool generates files conforming to the [Excalidraw file format](https://github.com/excalidraw/excalidraw/blob/master/packages/excalidraw/data/types.ts). Key specifications:
+
+- **File Format**: JSON with `type: "excalidraw"` and `version: 2`
+- **Element Types**: rectangle, ellipse, diamond, text, arrow, line, freedraw, image, frame
+- **Properties**: Follows official [element type definitions](https://github.com/excalidraw/excalidraw/blob/master/packages/excalidraw/element/types.ts)
+
+The `validate` command checks files against this specification:
+```bash
+excalidraw-agent validate diagram.excalidraw --strict
+```
+
 ## File Compatibility
 
 Output files are standard `.excalidraw` JSON files, compatible with:
