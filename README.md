@@ -212,6 +212,27 @@ npm test
 npm run test:100
 ```
 
+## 🤖 AI Agent Integration
+
+excalidraw-agent is designed for AI agents. See [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) for detailed integration guides:
+
+- **[Cursor](docs/INTEGRATIONS.md#cursor)** - AI-powered code editor
+- **[Claude Code](docs/INTEGRATIONS.md#claude-code)** - Anthropic's coding agent
+- **[Clawdbot](docs/INTEGRATIONS.md#clawdbot)** - Multi-channel AI assistant
+- **[Generic Agents](docs/INTEGRATIONS.md#generic-ai-agents)** - Any AI with shell access
+- **[MCP](docs/INTEGRATIONS.md#mcp-integration)** - Model Context Protocol (coming soon)
+
+### Quick Integration
+
+Add to your AI agent's system prompt or rules:
+```
+For diagrams, use excalidraw-agent:
+- Quick: excalidraw-agent quick "[A] -> [B] -> [C]" -o out.excalidraw
+- Export: excalidraw-agent export out.excalidraw --output out.png
+- Shapes: [rect] (ellipse) {diamond} <text>
+- Arrows: -> (solid) --> (dashed)
+```
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
