@@ -1,0 +1,77 @@
+{
+  "name": "excalidraw-agent",
+  "version": "1.0.0",
+  "description": "Agent-first CLI for creating, reading, modifying, and exporting Excalidraw drawings",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "excalidraw-agent": "./dist/cli.js"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:100": "for i in $(seq 1 100); do npm test --silent || exit 1; done && echo '✓ All 100 runs passed'",
+    "lint": "echo 'Lint not configured yet'",
+    "format": "prettier --write 'src/**/*.ts'",
+    "prepublishOnly": "npm run build && npm test",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "excalidraw",
+    "cli",
+    "diagram",
+    "flowchart",
+    "drawing",
+    "agent",
+    "ai",
+    "automation",
+    "svg",
+    "png",
+    "export"
+  ],
+  "author": {
+    "name": "Karthikeyan JP",
+    "url": "https://github.com/karthikeyanjp"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/karthikeyanjp/excalidraw-agent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/karthikeyanjp/excalidraw-agent/issues"
+  },
+  "homepage": "https://github.com/karthikeyanjp/excalidraw-agent#readme",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "nanoid": "^5.0.7"
+  },
+  "optionalDependencies": {
+    "playwright": "^1.57.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "prettier": "^3.4.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  }
+}
