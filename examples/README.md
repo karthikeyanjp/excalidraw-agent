@@ -1,55 +1,58 @@
-# Examples
+# Example Diagrams
 
-This directory contains example diagrams and scripts for excalidraw-agent.
+These diagrams were created entirely with excalidraw-agent commands.
 
-## Quick Start Examples
+## 1. Flowchart (`flowchart.excalidraw`)
 
-### Simple Flowchart
+A standard flowchart showing process flow with decision branching.
+
+![Flowchart](diagrams/flowchart.png)
+
+**Created with:**
 ```bash
-excalidraw-agent quick "(Start) -> [Process] -> {Done?} -> (End)" -o flowchart.excalidraw
+# Create shapes with IDs
+excalidraw-agent add diagram.excalidraw --type ellipse --x 200 --y 20 \
+  --width 100 --height 50 --fill "#d3f9d8" --label "Start" --id start
+
+excalidraw-agent add diagram.excalidraw --type diamond --x 175 --y 230 \
+  --width 150 --height 80 --fill "#fff3bf" --label "Valid?" --id decision
+
+# Connect with edge-to-edge arrows
+excalidraw-agent connect diagram.excalidraw --from start --to process1
+excalidraw-agent connect diagram.excalidraw --from decision --to error --label "No"
 ```
 
-### Architecture Diagram
-```bash
-excalidraw-agent quick "[Frontend] -> [API Gateway] -> [Backend] -> [[Database]]" \
-  -o architecture.excalidraw --style colorful
-```
+## 2. Microservices Architecture (`microservices.excalidraw`)
 
-### Vertical Layout
-```bash
-excalidraw-agent quick "[Step 1] -> [Step 2] -> [Step 3]" \
-  -o vertical.excalidraw --direction vertical
-```
+Multi-tier architecture with services, message queue, and databases.
 
-## Script Examples
+![Microservices](diagrams/microservices.png)
 
-### create-architecture.sh
-Creates a microservices architecture diagram with custom positioning.
+**Features:**
+- Client → API Gateway → Services
+- Services → Message Queue (async)
+- Services → Databases
+- Color-coded by layer
 
-```bash
-./create-architecture.sh
-```
+## 3. Quick DSL Demo (`quick-demo.excalidraw`)
 
-### batch-operations.sh  
-Demonstrates batch operations for complex diagrams.
+Created with single command using DSL syntax.
+
+![Quick Demo](diagrams/quick-demo.png)
 
 ```bash
-./batch-operations.sh
+excalidraw-agent quick "[Input] -> [Process] -> {Valid?} -> [Output]" \
+  -o diagram.excalidraw --style colorful
 ```
 
-## Sample Diagrams
+## DSL Syntax Reference
 
-| File | Description |
-|------|-------------|
-| `flowchart.excalidraw` | Simple process flow |
-| `architecture.excalidraw` | Microservices architecture |
-| `decision-tree.excalidraw` | Decision flowchart |
-| `sequence.excalidraw` | Sequence diagram style |
-
-## Generating Examples
-
-Run the generate script to create all examples:
-
-```bash
-./generate-examples.sh
-```
+| Syntax | Shape |
+|--------|-------|
+| `[Label]` | Rectangle |
+| `(Label)` | Ellipse |
+| `{Label}` | Diamond |
+| `<Label>` | Text |
+| `->` | Arrow |
+| `-->` | Dashed arrow |
+| `--` | Line |

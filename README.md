@@ -1,32 +1,23 @@
 ## Example Diagrams
 
-The following diagram was created entirely with excalidraw-agent, demonstrating proper edge-to-edge connections using the `connect` command:
+All created with excalidraw-agent using the `connect` command for proper edge-to-edge arrows.
 
-### Enterprise System Architecture
+### Flowchart
+![Flowchart](examples/diagrams/flowchart.png)
 
-A multi-tier architecture showing clients, gateways, services, messaging, and data layers with 71 elements and proper connections.
+### Microservices Architecture  
+![Microservices](examples/diagrams/microservices.png)
 
-![Enterprise Architecture](examples/diagrams/enterprise-arch.png)
-
-**Key features demonstrated:**
-- 5 architectural tiers (Presentation, Gateway, Application, Messaging, Data)
-- 22 components with color-coded categories
-- 19 connections using edge-to-edge calculation
-- Named element IDs for programmatic connection
-
+### Quick DSL
 ```bash
-# Create components with IDs
-excalidraw-agent add diagram.excalidraw \
-  --type rectangle --x 50 --y 290 --width 120 --height 50 \
-  --fill "#d3f9d8" --fill-style solid --label "Auth Service" --id auth-svc
-
-# Connect using element IDs (calculates edge-to-edge automatically)
-excalidraw-agent connect diagram.excalidraw --from api-gateway --to auth-svc
-excalidraw-agent connect diagram.excalidraw --from auth-svc --to auth-db
+excalidraw-agent quick "[Input] -> [Process] -> {Valid?} -> [Output]" -o flow.excalidraw
 ```
+![Quick Demo](examples/diagrams/quick-demo.png)
 
-See the [examples/diagrams](examples/diagrams) directory for source files.
+See [examples/README.md](examples/README.md) for creation commands.
 
+
+## Specification
 ## Specification
 ## Specification
 
