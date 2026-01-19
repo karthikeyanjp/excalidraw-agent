@@ -8,49 +8,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-01-19
 
 ### Added
-- Initial release 🎉
-- **Core Commands**
-  - `create` - Create new .excalidraw files
-  - `add` - Add elements (rectangle, ellipse, diamond, text, arrow, line, freedraw)
-  - `list` - List and filter elements
-  - `modify` - Update element properties
-  - `delete` - Remove elements
-  - `info` - Show file metadata
-  - `export` - Export to PNG/SVG
-  - `batch` - Execute multiple operations
-  
-- **Advanced Features**
-  - `validate` - Schema validation against official Excalidraw spec
-  - `connect` - Auto-connect elements with arrows
-  - `quick` - Create diagrams from simple DSL syntax
-  
-- **Quick DSL**
-  - Rectangle: `[Label]`
-  - Ellipse: `(Label)`
-  - Diamond: `{Label}`
-  - Text: `<Label>`
-  - Arrow: `->`
-  - Dashed: `-->`
-  - Line: `--`
-  
-- **Style Presets**
-  - `default` - Soft pastel colors
-  - `colorful` - Vibrant colors
-  - `minimal` - Clean grayscale
-  - `blueprint` - Dark blue theme
 
-- **Export Options**
-  - SVG export (built-in renderer)
-  - PNG export (via Playwright)
-  - Scale, padding, dark mode options
+**Core Commands**
+- `create` - Create new .excalidraw files with customizable background and grid
+- `add` - Add elements (rectangle, ellipse, diamond, text, arrow, line, freedraw)
+- `list` - List and filter elements by type or ID pattern
+- `modify` - Update element properties with set, move, and resize operations
+- `delete` - Remove elements by ID, type, or all
+- `info` - Display file metadata and element statistics
+- `export` - Export to PNG (via Playwright) or SVG
+- `batch` - Execute multiple operations atomically
 
-- **Testing**
-  - 96+ unit and integration tests
-  - Schema validation tests
-  - CLI integration tests
+**Advanced Commands**
+- `validate` - Schema validation against official Excalidraw specification
+- `connect` - Auto-connect two elements with smart edge detection
+- `quick` - Create diagrams from simple text DSL
 
-### Technical
+**Quick DSL**
+- Rectangle syntax: `[Label]`
+- Ellipse syntax: `(Label)`
+- Diamond syntax: `{Label}`
+- Text syntax: `<Label>`
+- Arrow: `->`
+- Dashed arrow: `-->`
+- Line: `--`
+
+**Style Presets**
+- `default` - Soft pastel colors
+- `colorful` - Vibrant colors
+- `minimal` - Clean grayscale
+- `blueprint` - Dark blue theme
+
+**Export Capabilities**
+- SVG export with built-in renderer
+- PNG export via Playwright headless browser
+- Scale, padding, and dark mode options
+
+**Developer Experience**
+- Full TypeScript implementation
+- 96+ unit and integration tests
+- Cross-platform support (macOS, Linux, Windows)
+- JSON input/output for programmatic use
+- Verbose mode for debugging
+
+### Technical Details
 - TypeScript with ES modules
-- Commander.js for CLI
+- Commander.js for CLI framework
 - Vitest for testing
-- Playwright for PNG export
+- Playwright for PNG rendering

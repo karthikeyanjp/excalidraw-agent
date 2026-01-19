@@ -1,6 +1,6 @@
 # AI Agent Integrations
 
-This guide explains how to use `excalidraw-agent` with popular AI coding assistants and agents.
+This guide explains how to integrate `excalidraw-agent` with AI coding assistants and agents.
 
 ## Table of Contents
 - [Cursor](#cursor)
@@ -8,66 +8,47 @@ This guide explains how to use `excalidraw-agent` with popular AI coding assista
 - [Clawdbot](#clawdbot)
 - [Generic AI Agents](#generic-ai-agents)
 - [MCP Integration](#mcp-integration)
+- [Best Practices](#best-practices)
 
 ---
 
 ## Cursor
 
-[Cursor](https://cursor.sh) is an AI-powered code editor. You can use excalidraw-agent to create architecture diagrams directly from your codebase.
+[Cursor](https://cursor.sh) is an AI-powered code editor. Use excalidraw-agent to create architecture diagrams directly from your codebase.
 
 ### Setup
 
-Add to your project's `.cursorrules` or instruct Cursor:
+Add to your project's `.cursorrules`:
 
-```
-When asked to create diagrams or visualizations, use the excalidraw-agent CLI:
+```markdown
+## Diagram Generation
+
+When creating diagrams, use excalidraw-agent CLI:
 - Install: npm install -g excalidraw-agent
-- Create diagrams with: excalidraw-agent quick "<DSL>" -o diagram.excalidraw
-- Export to PNG: excalidraw-agent export diagram.excalidraw --output diagram.png
+- Create: excalidraw-agent quick "<DSL>" -o diagram.excalidraw
+- Export: excalidraw-agent export diagram.excalidraw --output diagram.png
+
+### DSL Reference
+- [Label] = Rectangle (process/step)
+- (Label) = Ellipse (start/end)
+- {Label} = Diamond (decision)
+- -> = Arrow
+- --> = Dashed arrow
 ```
 
 ### Example Prompts
 
 **Architecture Diagram:**
 ```
-Create an architecture diagram showing our microservices: 
+Create an architecture diagram showing:
 API Gateway -> Auth Service -> User DB
            -> Product Service -> Product DB
-           -> Order Service -> Order DB
-Save it as architecture.excalidraw
+Save as architecture.excalidraw and export to PNG
 ```
 
-Cursor will run:
-```bash
-excalidraw-agent quick "[API Gateway] -> [Auth Service] -> [[User DB]]" -o architecture.excalidraw --style colorful
-excalidraw-agent add architecture.excalidraw --data '{"type":"arrow","x":200,"y":130,"points":[[0,0],[100,50]]}'
-# ... additional elements
-excalidraw-agent export architecture.excalidraw --output architecture.png
+**Flow from Code:**
 ```
-
-**Flow Diagram from Code:**
-```
-Analyze the checkout flow in src/checkout.ts and create a flowchart showing the process
-```
-
-### Cursor Rules Template
-
-```markdown
-# .cursorrules
-
-## Diagram Generation
-When creating diagrams:
-1. Use excalidraw-agent CLI for all diagram creation
-2. Use the quick DSL for simple flows: `excalidraw-agent quick "[A] -> [B]" -o out.excalidraw`
-3. Use JSON data for complex elements
-4. Always validate: `excalidraw-agent validate diagram.excalidraw`
-5. Export to PNG for preview: `excalidraw-agent export diagram.excalidraw --output diagram.png`
-
-## DSL Reference
-- [Label] = Rectangle (process/step)
-- (Label) = Ellipse (start/end)
-- {Label} = Diamond (decision)
-- -> = Arrow, --> = Dashed arrow
+Analyze the checkout flow in src/checkout.ts and create a flowchart
 ```
 
 ---
@@ -83,32 +64,7 @@ Ensure excalidraw-agent is installed globally:
 npm install -g excalidraw-agent
 ```
 
-### Example Session
-
-**You:** Create a sequence diagram showing the OAuth flow
-
-**Claude Code:**
-```bash
-# Create the OAuth flow diagram
-excalidraw-agent create oauth-flow.excalidraw --force
-
-# Add the actors/services
-excalidraw-agent add oauth-flow.excalidraw --data '{
-  "type": "rectangle", "x": 50, "y": 50, "width": 100, "height": 40,
-  "backgroundColor": "#a5d8ff", "fillStyle": "solid"
-}'
-excalidraw-agent add oauth-flow.excalidraw --data '{
-  "type": "text", "x": 70, "y": 60, "text": "Client", "fontSize": 16
-}'
-
-# ... more elements ...
-
-# Validate and export
-excalidraw-agent validate oauth-flow.excalidraw
-excalidraw-agent export oauth-flow.excalidraw --output oauth-flow.png
-```
-
-### CLAUDE.md Instructions
+### CLAUDE.md Configuration
 
 Add to your project's `CLAUDE.md`:
 
@@ -128,90 +84,75 @@ excalidraw-agent add file.excalidraw --data '{"type":"rectangle","x":0,"y":0,"wi
 # List elements
 excalidraw-agent list file.excalidraw --format table
 
-# Export
+# Export to PNG
 excalidraw-agent export file.excalidraw --output out.png
 ```
 
 ### Style Presets
-- `--style default` - Soft pastels
-- `--style colorful` - Vibrant
-- `--style minimal` - Clean grayscale
-- `--style blueprint` - Dark blue theme
+- default: Soft pastels
+- colorful: Vibrant
+- minimal: Grayscale
+- blueprint: Dark blue
 ```
 
 ---
 
 ## Clawdbot
 
-[Clawdbot](https://github.com/codefrau/clawdbot) is a multi-channel AI assistant. excalidraw-agent integrates seamlessly via shell commands.
+[Clawdbot](https://github.com/codefrau/clawdbot) is a multi-channel AI assistant. excalidraw-agent integrates via shell commands.
 
 ### Setup
 
-excalidraw-agent should be installed on the host running Clawdbot:
+Install on the host running Clawdbot:
 ```bash
 npm install -g excalidraw-agent
 npx playwright install chromium  # For PNG export
 ```
 
-### Using with Clawdbot
+### Usage
 
-Simply ask Clawdbot to create diagrams:
+Ask Clawdbot to create diagrams:
 
-**You:** Create a diagram showing our deployment pipeline: Build -> Test -> Stage -> Production
+**User:** Create a deployment pipeline diagram: Build -> Test -> Stage -> Production
 
-**Clawdbot (Pip 🦊):**
+**Clawdbot:**
 ```bash
 excalidraw-agent quick "(Start) -> [Build] -> [Test] -> [Stage] -> [Production] -> (Done)" \
-  -o /Users/karthikp/clawd/deployment-pipeline.excalidraw \
-  --style colorful
+  -o deployment-pipeline.excalidraw --style colorful
 
-excalidraw-agent export /Users/karthikp/clawd/deployment-pipeline.excalidraw \
-  --output /Users/karthikp/clawd/deployment-pipeline.png
-
-open /Users/karthikp/clawd/deployment-pipeline.png
+excalidraw-agent export deployment-pipeline.excalidraw --output deployment-pipeline.png
 ```
 
-### Skill Integration
+### Skill Configuration
 
-You can create a Clawdbot skill for enhanced diagram support:
+Create a Clawdbot skill at `skills/excalidraw/SKILL.md`:
 
 ```markdown
-# skills/excalidraw/SKILL.md
-
 ## Excalidraw Diagram Skill
 
 Use excalidraw-agent CLI for creating diagrams.
 
 ### Commands
-- `excalidraw-agent quick "<DSL>" -o <file>` - Quick diagram
-- `excalidraw-agent create <file>` - New empty file
-- `excalidraw-agent add <file> --data '<json>'` - Add element
-- `excalidraw-agent export <file> --output <out>` - Export PNG/SVG
+- excalidraw-agent quick "<DSL>" -o <file>
+- excalidraw-agent create <file>
+- excalidraw-agent add <file> --data '<json>'
+- excalidraw-agent export <file> --output <out>
 
 ### DSL Syntax
-- `[Label]` = Rectangle
-- `(Label)` = Ellipse
-- `{Label}` = Diamond
-- `->` = Arrow
-- `-->` = Dashed arrow
-
-### Examples
-```bash
-# Architecture diagram
-excalidraw-agent quick "[Frontend] -> [API] -> [[Database]]" -o arch.excalidraw
-
-# Flowchart with decision
-excalidraw-agent quick "(Start) -> [Process] -> {OK?} -> [Done]" -o flow.excalidraw
-```
+- [Label] = Rectangle
+- (Label) = Ellipse
+- {Label} = Diamond
+- -> = Arrow
+- --> = Dashed arrow
 ```
 
 ---
 
 ## Generic AI Agents
 
-For any AI agent with shell access, provide these instructions:
+For any AI agent with shell access, add these instructions to the system prompt:
 
-### System Prompt Addition
+### System Prompt Template
 
 ```
 You have access to excalidraw-agent, a CLI for creating Excalidraw diagrams.
@@ -219,7 +160,7 @@ You have access to excalidraw-agent, a CLI for creating Excalidraw diagrams.
 ## Quick Diagram (DSL)
 excalidraw-agent quick "<dsl>" -o output.excalidraw
 - [Label] = Rectangle
-- (Label) = Ellipse  
+- (Label) = Ellipse
 - {Label} = Diamond
 - -> = Arrow
 - --> = Dashed arrow
@@ -227,11 +168,9 @@ excalidraw-agent quick "<dsl>" -o output.excalidraw
 ## Manual Creation
 excalidraw-agent create diagram.excalidraw
 excalidraw-agent add diagram.excalidraw --data '{"type":"rectangle","x":100,"y":100,"width":150,"height":60}'
-excalidraw-agent add diagram.excalidraw --data '{"type":"text","x":110,"y":120,"text":"Hello"}'
 
 ## Export
 excalidraw-agent export diagram.excalidraw --output diagram.png
-excalidraw-agent export diagram.excalidraw --output diagram.svg
 
 ## Utilities
 excalidraw-agent list diagram.excalidraw --format table
@@ -241,7 +180,7 @@ excalidraw-agent validate diagram.excalidraw
 All output is JSON for easy parsing. Use --verbose for debugging.
 ```
 
-### JSON Output Pattern
+### JSON Output
 
 All commands support `--json` for structured output:
 
@@ -260,9 +199,9 @@ $ excalidraw-agent info diagram.excalidraw --json
 
 ## MCP Integration
 
-excalidraw-agent can be exposed as an [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server for tool-use capable models.
+excalidraw-agent can be exposed as an [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server.
 
-### MCP Server (Coming Soon)
+### Configuration (Planned)
 
 ```json
 {
@@ -276,7 +215,7 @@ excalidraw-agent can be exposed as an [MCP (Model Context Protocol)](https://mod
 }
 ```
 
-### Tools Exposed
+### Tools (Planned)
 
 | Tool | Description |
 |------|-------------|
@@ -304,27 +243,33 @@ excalidraw-agent add file.excalidraw --data '{
   "y": 200,
   "width": 150,
   "height": 80,
-  "backgroundColor": "#a5d8ff",
-  "strokeColor": "#1864ab"
+  "backgroundColor": "#a5d8ff"
 }'
 ```
 
-### 3. Always Validate Before Sharing
+### 3. Use stdin for Cross-Platform JSON
+```bash
+echo '{"type":"rectangle","x":0,"y":0}' | excalidraw-agent add file.excalidraw --stdin
+```
+
+### 4. Validate Before Sharing
 ```bash
 excalidraw-agent validate diagram.excalidraw --strict
 ```
 
-### 4. Export for Preview
+### 5. Export for Documentation
 ```bash
 excalidraw-agent export diagram.excalidraw --output preview.png --scale 2
 ```
 
-### 5. Use Batch for Multiple Operations
+### 6. Use Batch for Atomic Operations
 ```bash
-excalidraw-agent batch diagram.excalidraw --ops '[
+excalidraw-agent batch diagram.excalidraw --stdin << 'EOF'
+[
   {"op":"add","element":{"type":"rectangle","x":0,"y":0,"width":100,"height":50}},
   {"op":"add","element":{"type":"text","x":10,"y":15,"text":"Box 1"}}
-]'
+]
+EOF
 ```
 
 ---
@@ -333,31 +278,19 @@ excalidraw-agent batch diagram.excalidraw --ops '[
 
 ### PNG Export Fails
 ```bash
-# Install Playwright
 npm install -g playwright
 npx playwright install chromium
 ```
 
 ### Command Not Found
 ```bash
-# Install globally
 npm install -g excalidraw-agent
-
 # Or use npx
 npx excalidraw-agent quick "[A] -> [B]" -o out.excalidraw
 ```
 
-### Validation Errors
+### Windows Shell Issues
+Use stdin for JSON data instead of shell quoting:
 ```bash
-# Check what's wrong
-excalidraw-agent validate file.excalidraw
-
-# Get detailed JSON output
-excalidraw-agent validate file.excalidraw --json
+echo '{"type":"rectangle"}' | excalidraw-agent add file.excalidraw --stdin
 ```
-
----
-
-## Examples Repository
-
-See the [examples/](../examples/) directory for sample diagrams and scripts.
