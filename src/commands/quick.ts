@@ -1,8 +1,9 @@
 import { Command } from 'commander';
 import { createEmptyFile, writeFile } from '../utils/file.js';
 import { createElement } from '../utils/element.js';
+import { generateVersionNonce } from '../utils/id.js';
 import { outputJson, verbose } from '../utils/output.js';
-import type { ExcalidrawElement, ElementType } from '../types/excalidraw.js';
+import type { ExcalidrawElement, ElementType, Binding } from '../types/excalidraw.js';
 
 export interface QuickOptions {
   output: string;
@@ -105,6 +106,25 @@ function parseQuickDSL(input: string): { nodes: ParsedNode[]; connections: Parse
   return { nodes, connections };
 }
 
+/**
+ * Add a bound element reference to an element
+ */
+function addBoundElement(
+  element: ExcalidrawElement,
+  boundId: string,
+  boundType: string
+): ExcalidrawElement {
+  const currentBoundElements = element.boundElements ?? [];
+  
+  return {
+    ...element,
+    boundElements: [...currentBoundElements, { id: boundId, type: boundType }],
+    version: element.version + 1,
+    versionNonce: generateVersionNonce(),
+    updated: Date.now()
+  };
+}
+
 export function quickCommand(): Command {
   return new Command('quick')
     .description('Create a quick diagram from simple text DSL')
@@ -131,9 +151,11 @@ export function quickCommand(): Command {
       const isMinimal = options.style === 'minimal';
       const isBlueprint = options.style === 'blueprint';
 
+      // Track shape elements for binding (index -> shape element)
+      const shapeElements: Map<number, ExcalidrawElement> = new Map();
+      const shapeIndices: Map<number, number> = new Map(); // node index -> file.elements index
+
       // Create node elements
-      const nodeElements: ExcalidrawElement[] = [];
-      
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i];
         const color = palette[i % palette.length];
@@ -151,7 +173,9 @@ export function quickCommand(): Command {
             fontSize: 18,
             strokeColor: isBlueprint ? '#ffffff' : '#1e1e1e'
           });
-          nodeElements.push(textEl);
+          shapeIndices.set(i, file.elements.length);
+          shapeElements.set(i, textEl);
+          file.elements.push(textEl);
         } else {
           // Shape + text
           const width = node.type === 'diamond' ? 120 : 150;
@@ -169,7 +193,10 @@ export function quickCommand(): Command {
             strokeWidth: isMinimal ? 1 : 2,
             roughness: isMinimal ? 0 : 1
           });
-          nodeElements.push(shapeEl);
+          
+          shapeIndices.set(i, file.elements.length);
+          shapeElements.set(i, shapeEl);
+          file.elements.push(shapeEl);
 
           // Add centered label
           const fontSize = 16;
@@ -185,32 +212,44 @@ export function quickCommand(): Command {
             textAlign: 'center',
             strokeColor: isBlueprint ? '#ffffff' : '#1e1e1e'
           });
-          nodeElements.push(textEl);
+          file.elements.push(textEl);
         }
       }
 
-      file.elements.push(...nodeElements);
-
-      // Create connections
+      // Create connections with bindings
       for (const conn of connections) {
-        const fromNode = nodeElements[conn.from * 2]; // *2 because each node has shape + text
-        const toNode = nodeElements[conn.to * 2];
+        const fromShape = shapeElements.get(conn.from);
+        const toShape = shapeElements.get(conn.to);
+        const fromIdx = shapeIndices.get(conn.from);
+        const toIdx = shapeIndices.get(conn.to);
 
-        if (!fromNode || !toNode) continue;
+        if (!fromShape || !toShape || fromIdx === undefined || toIdx === undefined) continue;
 
         let startX: number, startY: number, endX: number, endY: number;
 
         if (isVertical) {
-          startX = fromNode.x + fromNode.width / 2;
-          startY = fromNode.y + fromNode.height;
-          endX = toNode.x + toNode.width / 2;
-          endY = toNode.y;
+          startX = fromShape.x + fromShape.width / 2;
+          startY = fromShape.y + fromShape.height;
+          endX = toShape.x + toShape.width / 2;
+          endY = toShape.y;
         } else {
-          startX = fromNode.x + fromNode.width;
-          startY = fromNode.y + fromNode.height / 2;
-          endX = toNode.x;
-          endY = toNode.y + toNode.height / 2;
+          startX = fromShape.x + fromShape.width;
+          startY = fromShape.y + fromShape.height / 2;
+          endX = toShape.x;
+          endY = toShape.y + toShape.height / 2;
         }
+
+        // Create bindings
+        const startBinding: Binding = {
+          elementId: fromShape.id,
+          focus: 0,
+          gap: 1
+        };
+        const endBinding: Binding = {
+          elementId: toShape.id,
+          focus: 0,
+          gap: 1
+        };
 
         const arrowEl = createElement({
           type: 'arrow',
@@ -219,8 +258,19 @@ export function quickCommand(): Command {
           points: [[0, 0], [endX - startX, endY - startY]],
           strokeColor: isBlueprint ? '#ffffff' : '#1e1e1e',
           strokeStyle: conn.dashed ? 'dashed' : 'solid',
+          startBinding,
+          endBinding,
           endArrowhead: 'arrow'
         });
+
+        // Update shape elements with boundElements
+        file.elements[fromIdx] = addBoundElement(file.elements[fromIdx], arrowEl.id, 'arrow');
+        file.elements[toIdx] = addBoundElement(file.elements[toIdx], arrowEl.id, 'arrow');
+        
+        // Update our tracking maps
+        shapeElements.set(conn.from, file.elements[fromIdx]);
+        shapeElements.set(conn.to, file.elements[toIdx]);
+
         file.elements.push(arrowEl);
 
         // Add label if present

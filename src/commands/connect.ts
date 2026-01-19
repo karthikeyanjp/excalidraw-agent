@@ -1,8 +1,9 @@
 import { Command } from 'commander';
 import { readFile, writeFile } from '../utils/file.js';
 import { createElement } from '../utils/element.js';
+import { generateVersionNonce } from '../utils/id.js';
 import { outputJson, verbose } from '../utils/output.js';
-import type { ExcalidrawFile, ExcalidrawElement } from '../types/excalidraw.js';
+import type { ExcalidrawElement, Binding } from '../types/excalidraw.js';
 
 export interface ConnectOptions {
   from: string;
@@ -13,62 +14,120 @@ export interface ConnectOptions {
 }
 
 /**
- * Calculate connection points between two elements
+ * Determine which edge of an element faces another element
  */
-function getConnectionPoints(
+function getClosestEdge(
+  element: ExcalidrawElement,
+  targetX: number,
+  targetY: number
+): 'left' | 'right' | 'top' | 'bottom' {
+  const centerX = element.x + element.width / 2;
+  const centerY = element.y + element.height / 2;
+  
+  const dx = targetX - centerX;
+  const dy = targetY - centerY;
+  
+  if (Math.abs(dx) > Math.abs(dy)) {
+    return dx > 0 ? 'right' : 'left';
+  } else {
+    return dy > 0 ? 'bottom' : 'top';
+  }
+}
+
+/**
+ * Get the connection point on an element's edge
+ */
+function getEdgePoint(
+  element: ExcalidrawElement,
+  edge: 'left' | 'right' | 'top' | 'bottom'
+): { x: number; y: number } {
+  const centerX = element.x + element.width / 2;
+  const centerY = element.y + element.height / 2;
+  
+  switch (edge) {
+    case 'left':
+      return { x: element.x, y: centerY };
+    case 'right':
+      return { x: element.x + element.width, y: centerY };
+    case 'top':
+      return { x: centerX, y: element.y };
+    case 'bottom':
+      return { x: centerX, y: element.y + element.height };
+  }
+}
+
+/**
+ * Calculate connection points and bindings between two elements
+ */
+function getConnectionData(
   from: ExcalidrawElement,
   to: ExcalidrawElement
-): { startX: number; startY: number; endX: number; endY: number } {
+): {
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  startBinding: Binding;
+  endBinding: Binding;
+} {
   const fromCenterX = from.x + from.width / 2;
   const fromCenterY = from.y + from.height / 2;
   const toCenterX = to.x + to.width / 2;
   const toCenterY = to.y + to.height / 2;
 
-  // Determine connection points based on relative positions
-  let startX: number, startY: number, endX: number, endY: number;
+  // Determine which edges to connect
+  const fromEdge = getClosestEdge(from, toCenterX, toCenterY);
+  const toEdge = getClosestEdge(to, fromCenterX, fromCenterY);
 
-  const dx = toCenterX - fromCenterX;
-  const dy = toCenterY - fromCenterY;
+  // Get edge points
+  const startPoint = getEdgePoint(from, fromEdge);
+  const endPoint = getEdgePoint(to, toEdge);
 
-  // Connect from edges based on direction
-  if (Math.abs(dx) > Math.abs(dy)) {
-    // Horizontal connection
-    if (dx > 0) {
-      // Connect from right to left
-      startX = from.x + from.width;
-      startY = fromCenterY;
-      endX = to.x;
-      endY = toCenterY;
-    } else {
-      // Connect from left to right
-      startX = from.x;
-      startY = fromCenterY;
-      endX = to.x + to.width;
-      endY = toCenterY;
+  return {
+    startX: startPoint.x,
+    startY: startPoint.y,
+    endX: endPoint.x,
+    endY: endPoint.y,
+    startBinding: {
+      elementId: from.id,
+      focus: 0,
+      gap: 1
+    },
+    endBinding: {
+      elementId: to.id,
+      focus: 0,
+      gap: 1
     }
-  } else {
-    // Vertical connection
-    if (dy > 0) {
-      // Connect from bottom to top
-      startX = fromCenterX;
-      startY = from.y + from.height;
-      endX = toCenterX;
-      endY = to.y;
-    } else {
-      // Connect from top to bottom
-      startX = fromCenterX;
-      startY = from.y;
-      endX = toCenterX;
-      endY = to.y + to.height;
-    }
+  };
+}
+
+/**
+ * Add a bound element reference to an element
+ */
+function addBoundElement(
+  element: ExcalidrawElement,
+  boundId: string,
+  boundType: string
+): ExcalidrawElement {
+  const currentBoundElements = element.boundElements ?? [];
+  
+  // Check if already bound
+  if (currentBoundElements.some(b => b.id === boundId)) {
+    return element;
   }
-
-  return { startX, startY, endX, endY };
+  
+  return {
+    ...element,
+    boundElements: [...currentBoundElements, { id: boundId, type: boundType }],
+    version: element.version + 1,
+    versionNonce: generateVersionNonce(),
+    updated: Date.now()
+  };
 }
 
 export function connectCommand(): Command {
   return new Command('connect')
-    .description('Connect two elements with an arrow or line')
+    .description('Connect two elements with a bound arrow or line')
     .argument('<file>', 'Path to the .excalidraw file')
     .requiredOption('--from <id>', 'ID of the source element')
     .requiredOption('--to <id>', 'ID of the target element')
@@ -81,41 +140,53 @@ export function connectCommand(): Command {
       const file = readFile(filePath);
 
       // Find source and target elements
-      const fromEl = file.elements.find(el => el.id === options.from || el.id.startsWith(options.from));
-      const toEl = file.elements.find(el => el.id === options.to || el.id.startsWith(options.to));
+      const fromIdx = file.elements.findIndex(el => el.id === options.from || el.id.startsWith(options.from));
+      const toIdx = file.elements.findIndex(el => el.id === options.to || el.id.startsWith(options.to));
 
-      if (!fromEl) {
+      if (fromIdx === -1) {
         console.error(`Error: Source element not found: ${options.from}`);
         process.exit(1);
       }
-      if (!toEl) {
+      if (toIdx === -1) {
         console.error(`Error: Target element not found: ${options.to}`);
         process.exit(1);
       }
 
-      // Calculate connection points
-      const points = getConnectionPoints(fromEl, toEl);
+      const fromEl = file.elements[fromIdx];
+      const toEl = file.elements[toIdx];
 
-      // Create the connection element
+      // Calculate connection data with bindings
+      const connData = getConnectionData(fromEl, toEl);
+
+      // Create the connection element with bindings
       const connectionEl = createElement({
         type: options.style === 'line' ? 'line' : 'arrow',
-        x: points.startX,
-        y: points.startY,
+        x: connData.startX,
+        y: connData.startY,
         points: [
           [0, 0],
-          [points.endX - points.startX, points.endY - points.startY]
+          [connData.endX - connData.startX, connData.endY - connData.startY]
         ],
         strokeColor: options.color,
+        startBinding: connData.startBinding,
+        endBinding: connData.endBinding,
         endArrowhead: options.style === 'arrow' ? 'arrow' : null
       });
 
+      // Update source element with boundElements
+      file.elements[fromIdx] = addBoundElement(fromEl, connectionEl.id, options.style === 'line' ? 'line' : 'arrow');
+      
+      // Update target element with boundElements
+      file.elements[toIdx] = addBoundElement(toEl, connectionEl.id, options.style === 'line' ? 'line' : 'arrow');
+
+      // Add the connection element
       file.elements.push(connectionEl);
 
       // If label provided, add text element at midpoint
       let labelEl: ExcalidrawElement | null = null;
       if (options.label) {
-        const midX = (points.startX + points.endX) / 2;
-        const midY = (points.startY + points.endY) / 2;
+        const midX = (connData.startX + connData.endX) / 2;
+        const midY = (connData.startY + connData.endY) / 2;
 
         labelEl = createElement({
           type: 'text',
@@ -135,7 +206,8 @@ export function connectCommand(): Command {
           id: connectionEl.id,
           from: fromEl.id,
           to: toEl.id,
-          type: options.style
+          type: options.style,
+          bound: true
         },
         label: labelEl ? { id: labelEl.id, text: options.label } : null
       });
