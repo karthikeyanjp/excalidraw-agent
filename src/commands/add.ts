@@ -30,6 +30,9 @@ export interface AddOptions {
   endBinding?: string;
   startArrow?: Arrowhead;
   endArrow?: Arrowhead;
+  label?: string;
+  labelSize?: string;
+  centerIn?: string;
 }
 
 /**
@@ -152,6 +155,9 @@ export function addCommand(): Command {
     .option('--end-binding <id>', 'Bind end to element ID')
     .option('--start-arrow <type>', 'Start arrowhead (arrow, bar, dot, triangle)')
     .option('--end-arrow <type>', 'End arrowhead (arrow, bar, dot, triangle)')
+    .option('--label <text>', 'Add centered label text within the shape')
+    .option('--label-size <n>', 'Label font size (default: 16)')
+    .option('--center-in <id>', 'Center this text element within another element')
     .action(async (filePath: string, options: AddOptions) => {
       try {
         verbose(`Adding elements to: ${filePath}`);
@@ -167,6 +173,43 @@ export function addCommand(): Command {
           verbose(`Creating ${input.type} at (${input.x}, ${input.y})`);
           return createElement(input);
         });
+        
+        // Handle --center-in: center text element within another element
+        if (options.centerIn && newElements.length === 1 && newElements[0].type === 'text') {
+          const targetEl = file.elements.find(el => 
+            el.id === options.centerIn || el.id.startsWith(options.centerIn!)
+          );
+          if (targetEl) {
+            const textEl = newElements[0];
+            // Center horizontally and vertically within target
+            textEl.x = targetEl.x + (targetEl.width - textEl.width) / 2;
+            textEl.y = targetEl.y + (targetEl.height - textEl.height) / 2;
+            verbose(`Centered text in ${targetEl.id}`);
+          }
+        }
+        
+        // Handle --label: add centered text to shape elements
+        if (options.label) {
+          const labelFontSize = parseInt(options.labelSize ?? '16', 10);
+          for (const el of newElements) {
+            if (['rectangle', 'ellipse', 'diamond'].includes(el.type)) {
+              // Estimate text dimensions
+              const textWidth = options.label.length * labelFontSize * 0.6;
+              const textHeight = labelFontSize * 1.25;
+              
+              const labelEl = createElement({
+                type: 'text',
+                x: el.x + (el.width - textWidth) / 2,
+                y: el.y + (el.height - textHeight) / 2,
+                text: options.label,
+                fontSize: labelFontSize,
+                textAlign: 'center'
+              });
+              newElements.push(labelEl);
+              verbose(`Added centered label to ${el.type}`);
+            }
+          }
+        }
         
         // Add to file
         file.elements.push(...newElements);

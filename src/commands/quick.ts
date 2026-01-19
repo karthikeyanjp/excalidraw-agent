@@ -171,13 +171,18 @@ export function quickCommand(): Command {
           });
           nodeElements.push(shapeEl);
 
-          // Add label
+          // Add centered label
+          const fontSize = 16;
+          const estimatedTextWidth = node.label.length * fontSize * 0.6;
+          const estimatedTextHeight = fontSize * 1.25;
+          
           const textEl = createElement({
             type: 'text',
-            x: baseX + 10,
-            y: baseY + height / 2 - 10,
+            x: baseX + (width - estimatedTextWidth) / 2,
+            y: baseY + (height - estimatedTextHeight) / 2,
             text: node.label,
-            fontSize: 16,
+            fontSize,
+            textAlign: 'center',
             strokeColor: isBlueprint ? '#ffffff' : '#1e1e1e'
           });
           nodeElements.push(textEl);
