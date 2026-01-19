@@ -121,8 +121,9 @@ describe('CLI Integration Tests', () => {
       const file = path.join(tempDir, 'test.excalidraw');
       run(`create "${file}"`);
       
+      // Use stdin to pass JSON data (cross-platform)
       const data = JSON.stringify({ type: 'ellipse', x: 50, y: 50, width: 100, height: 100 });
-      const { stdout } = run(`add "${file}" --data '${data}'`);
+      const { stdout } = run(`add "${file}" --stdin`, { input: data });
       const result = parseOutput(stdout);
       
       expect(result.added[0].type).toBe('ellipse');
@@ -132,7 +133,9 @@ describe('CLI Integration Tests', () => {
       const file = path.join(tempDir, 'test.excalidraw');
       run(`create "${file}"`);
       
-      const { stdout } = run(`add "${file}" --type arrow --x 0 --y 0 --points '[[0,0],[100,50]]'`);
+      // Use stdin for JSON data (cross-platform)
+      const data = JSON.stringify({ type: 'arrow', x: 0, y: 0, points: [[0,0],[100,50]] });
+      const { stdout } = run(`add "${file}" --stdin`, { input: data });
       const result = parseOutput(stdout);
       
       expect(result.added[0].type).toBe('arrow');
@@ -172,7 +175,8 @@ describe('CLI Integration Tests', () => {
       run(`add "${file}" --type rectangle --x 100 --y 0 --id rect-2`);
       run(`add "${file}" --type text --x 50 --y 50 --text "Hi" --id text-1`);
       
-      const { stdout } = run(`list "${file}" --id 'rect-*'`);
+      // Use double quotes for cross-platform compatibility
+      const { stdout } = run(`list "${file}" --id "rect-*"`);
       const elements = parseOutput(stdout);
       
       expect(elements).toHaveLength(2);
@@ -212,7 +216,8 @@ describe('CLI Integration Tests', () => {
       run(`add "${file}" --type rectangle --x 0 --y 0 --id rect-1`);
       run(`add "${file}" --type rectangle --x 100 --y 0 --id rect-2`);
       
-      const { stdout } = run(`modify "${file}" --id 'rect-*' --set strokeColor="#ff0000"`);
+      // Use double quotes for cross-platform compatibility
+      const { stdout } = run(`modify "${file}" --id "rect-*" --set strokeColor="#ff0000"`);
       const result = parseOutput(stdout);
       
       expect(result.modified).toHaveLength(2);
@@ -356,7 +361,8 @@ describe('CLI Integration Tests', () => {
         { op: 'modify', id: 'rect-1', set: { strokeColor: '#ff0000' } }
       ]);
       
-      const { stdout } = run(`batch "${file}" --ops '${ops}'`);
+      // Use stdin for cross-platform JSON passing
+      const { stdout } = run(`batch "${file}" --stdin`, { input: ops });
       const result = parseOutput(stdout);
       
       expect(result.success).toBe(true);
@@ -374,7 +380,8 @@ describe('CLI Integration Tests', () => {
         { op: 'delete', id: 'rect-1' }
       ]);
       
-      const { stdout } = run(`batch "${file}" --ops '${ops}'`);
+      // Use stdin for cross-platform JSON passing
+      const { stdout } = run(`batch "${file}" --stdin`, { input: ops });
       const result = parseOutput(stdout);
       
       expect(result.elementCount).toBe(1);
